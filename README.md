@@ -20,7 +20,7 @@ E.g.:
       --config string      Optional config file (default is $HOME/.homeassistant.yaml)
       --endpoint string    Endpoint for Home Assistant Supervisor (default is 'supervisor')
   -h, --help               help for ha
-      --log-level string   Log level (defaults to Warn)
+      --log-level string   Minimum log level to display when used with a logs subcommand (DEBUG/INFO/WARNING/ERROR); also controls the CLI's own verbosity (defaults to Warn)
       --no-progress        Disable the progress spinner
       --raw-json           Output raw JSON from the API
 ```
