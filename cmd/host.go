@@ -87,7 +87,7 @@ func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, func(
 
 	logLevelFlag := cmd.Root().PersistentFlags().Lookup("log-level")
 	if logLevelFlag != nil && logLevelFlag.Changed {
-		// Normalise "WARNING" → "WARN" so that slog.Level.UnmarshalText accepts it.
+		// Normalize "WARNING" → "WARN" so that slog.Level.UnmarshalText accepts it.
 		levelStr := strings.ToUpper(viper.GetString("log-level"))
 		if levelStr == "WARNING" {
 			levelStr = "WARN"
