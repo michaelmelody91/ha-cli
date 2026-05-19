@@ -26,7 +26,7 @@ across services and boots.
 
 		section := "host"
 
-		request, err := processLogsFlags(section, cmd)
+		request, streamFn, err := processLogsFlags(section, cmd)
 
 		if err != nil {
 			helper.PrintError(err)
@@ -53,7 +53,7 @@ across services and boots.
 			return
 		}
 
-		ExitWithError = !helper.StreamTextResponse(resp)
+		ExitWithError = !streamFn(resp)
 	},
 }
 

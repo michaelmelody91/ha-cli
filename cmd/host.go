@@ -3,10 +3,12 @@ package cmd
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/home-assistant/cli/client"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var hostCmd = &cobra.Command{
@@ -41,7 +43,7 @@ func addLogsFlags(cmd *cobra.Command) {
 	cmd.RegisterFlagCompletionFunc("boot", hostBootCompletions)
 }
 
-func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, error) {
+func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, func(*resty.Response) bool, error) {
 	command := "logs"
 
 	boot, _ := cmd.Flags().GetString("boot")
@@ -56,7 +58,7 @@ func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, error
 
 	URL, err := client.URLHelper(section, command)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	accept := "text/plain"
@@ -78,5 +80,26 @@ func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, error
 	request.SetPathParam("boot", boot)
 	request.URL = URL
 
-	return request, nil
+	// Determine the stream function. When --log-level is explicitly provided by
+	// the user (i.e. not just the Viper default), apply client-side filtering so
+	// that only log entries at or above that level are printed.
+	streamFn := client.StreamTextResponse
+
+	logLevelFlag := cmd.Root().PersistentFlags().Lookup("log-level")
+	if logLevelFlag != nil && logLevelFlag.Changed {
+		// Normalize "WARNING" → "WARN" so that slog.Level.UnmarshalText accepts it.
+		levelStr := strings.ToUpper(viper.GetString("log-level"))
+		if levelStr == "WARNING" {
+			levelStr = "WARN"
+		}
+		var level slog.Level
+		if level.UnmarshalText([]byte(levelStr)) == nil {
+			lvl := level // capture for closure
+			streamFn = func(resp *resty.Response) bool {
+				return client.StreamFilteredTextResponse(resp, lvl)
+			}
+		}
+	}
+
+	return request, streamFn, nil
 }

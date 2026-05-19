@@ -11,7 +11,9 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -20,8 +22,6 @@ import (
 	yaml "github.com/ghodss/yaml"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/spf13/viper"
-
-	"strings"
 )
 
 const DefaultTimeout = 30 * time.Second
@@ -181,6 +181,58 @@ func StreamTextResponse(resp *resty.Response) (success bool) {
 		if err == io.EOF {
 			break
 		}
+	}
+	return
+}
+
+// haLogLineRe matches a standard Home Assistant log line and captures the log level.
+// Expected format: "YYYY-MM-DD HH:MM:SS.mmm LEVEL ..."
+var haLogLineRe = regexp.MustCompile(`^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+ (\w+) `)
+
+// parseHALogLevel extracts the slog.Level from a Home Assistant log line.
+// Returns the level and true when the line is a recognised log entry header,
+// or (0, false) for continuation lines (e.g. stack traces).
+func parseHALogLevel(line string) (slog.Level, bool) {
+	m := haLogLineRe.FindStringSubmatch(line)
+	if m == nil {
+		return 0, false
+	}
+	switch m[1] {
+	case "DEBUG":
+		return slog.LevelDebug, true
+	case "INFO":
+		return slog.LevelInfo, true
+	case "WARNING":
+		return slog.LevelWarn, true
+	case "ERROR":
+		return slog.LevelError, true
+	case "CRITICAL":
+		// CRITICAL is one step above ERROR in Home Assistant / Python logging.
+		return slog.LevelError + 4, true
+	default:
+		return 0, false
+	}
+}
+
+// StreamFilteredTextResponse streams a text log response while discarding entries
+// whose level is below minLevel.  Continuation lines (e.g. Python stack traces)
+// inherit the visibility of the log entry header that precedes them.
+func StreamFilteredTextResponse(resp *resty.Response, minLevel slog.Level) (success bool) {
+	success = true
+	include := true // show lines that appear before the first recognisable entry
+	scanner := bufio.NewScanner(resp.RawBody())
+	for scanner.Scan() {
+		line := scanner.Text()
+		if level, ok := parseHALogLevel(line); ok {
+			include = level >= minLevel
+		}
+		if include {
+			fmt.Println(line)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		fmt.Println(err)
+		success = false
 	}
 	return
 }
