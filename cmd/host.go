@@ -89,24 +89,6 @@ func processLogsFlags(section string, cmd *cobra.Command) (*resty.Request, error
 		request.SetHeader("Range", rangeHeader)
 	}
 
-	fromStr, _ := cmd.Flags().GetString("from")
-	if fromStr != "" {
-		ts, err := parseTimestamp(fromStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid --from value: %w", err)
-		}
-		request.SetQueryParam("range_start", strconv.FormatInt(ts, 10))
-	}
-
-	toStr, _ := cmd.Flags().GetString("to")
-	if toStr != "" {
-		ts, err := parseTimestamp(toStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid --to value: %w", err)
-		}
-		request.SetQueryParam("range_end", strconv.FormatInt(ts, 10))
-	}
-
 	request.SetPathParam("boot", boot)
 	request.URL = URL
 
