@@ -35,8 +35,8 @@ func addLogsFlags(cmd *cobra.Command) {
 	cmd.Flags().Uint32P("lines", "n", 0, "Number of log entries to show")
 	cmd.Flags().StringP("boot", "b", "", "Logs of particular boot ID")
 	cmd.Flags().BoolP("verbose", "v", false, "Return logs in verbose format")
-	cmd.Flags().String("from", "", "Show entries starting from this point in time (RFC3339 e.g. '2024-01-15T10:30:00Z', date e.g. '2024-01-15', or relative duration e.g. '1h', '30m', '2d')")
-	cmd.Flags().String("to", "", "Show entries up to this point in time (RFC3339 e.g. '2024-01-15T10:30:00Z', date e.g. '2024-01-15', or relative duration e.g. '1h', '30m', '2d')")
+	cmd.Flags().String("from", "", "Show entries starting from this point in time (RFC3339 e.g. '2024-01-15T10:30:00Z', date e.g. '2024-01-15', or relative duration e.g. '1h', '30m', '2d', '1w')")
+	cmd.Flags().String("to", "", "Show entries up to this point in time (RFC3339 e.g. '2024-01-15T10:30:00Z', date e.g. '2024-01-15', or relative duration e.g. '1h', '30m', '2d', '1w')")
 	cmd.Flags().Lookup("follow").NoOptDefVal = "true"
 	cmd.Flags().Lookup("verbose").NoOptDefVal = "true"
 
