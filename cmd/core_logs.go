@@ -39,7 +39,7 @@ running on your Home Assistant system.`,
 			return
 		}
 
-		ExitWithError = !helper.StreamTextResponse(resp)
+		ExitWithError = !streamLogsFromResponse(resp, cmd)
 	},
 }
 

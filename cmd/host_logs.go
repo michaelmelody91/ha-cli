@@ -53,7 +53,7 @@ across services and boots.
 			return
 		}
 
-		ExitWithError = !helper.StreamTextResponse(resp)
+		ExitWithError = !streamLogsFromResponse(resp, cmd)
 	},
 }
 
